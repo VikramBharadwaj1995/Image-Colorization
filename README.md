@@ -1,4 +1,5 @@
-# Name - Vikram Bharadwaj<br>Email - vikrambharadwaj1995@gmail.com
+## Vikram Bharadwaj - bharadwaj.vi@northeastern.edu
+
 
 # Image Colorization Starter Code
 The objective is to produce color images given grayscale input image. 
@@ -34,32 +35,36 @@ You are tasked to control the average color/mood of the image that you are color
 - Update this README.md file to add instructions on how to run your code. (train, inference). 
 - Once you are done, zip the code, upload your solution.  
 
-## Documenting my progress
-***Please find comments in every file about the use of every line of code written!***
-The approach I am following is as follows:
-Any image contains the following channels: L, *a and *b.
-L - This channel always corresponds to the greyscale component of the image or the lightness of the image.
-*a and *b channels - Map the four unique colors Red, Green, Blue and Yellow.
-
-- Made changes to basic_model.py by adding only 2 output neurons from the final layer of the convolutional network, which maps to *a and *b channels. 
-- Made changes to basic_model.py by adding an extra class called AverageMeter(), which tracks the metrics of the model such as training loss, validation loss and and time taken for each batch.
-- Added the use_gpu flag to check for GPU, else use the model as is on the available CPU
-- Got dataloaders to work by passing the train and validation dataset
+# Documenting my progress for Image Colorization:
+The following are the model parameters and training steps:</br>
+- Got dataloaders to work by passing the train and validation dataset, by splitting the dataset into 80-20 train/test.
 - Defined the following model parameters:
     * Learning rate = 0.001
     * Batch size = 64
-    * Epochs = 50
-    * Training/Val split = 75% train and 25% validation
+    * Epochs = 100
+    * Training/Val split = 80% train and 20% validation
     * Criteria = Mean Squared Error loss function
     * Optimizer = Tried both RMSProp and Adam and found Adam to be working better
-- The training and validation methods convert the incoming input and output into a pytorch Variable, that helps in conversion of the incoming data to a pytorch wrapper around the tensor.
-- To enhance the final input image, I tried playing around with different paramters and functions that OpenCV has to offer. I ended up using cv2.detailEnhance, which worked much better than adding any kind of filter, dilation or erosion of the image.
+    * Evaluation Metric - Peak Signal to Noise Ratio(PSNR)
+- All the checkpoints are being stored in a directory called './checkpoints', in the current working directory. The train vs validation loss and PSNR plots will be stored in this directory once the training is complete.
 
-## Running the model
-- Please run the model to train as:
-` python execute_model.py <data_dir> or by default landscape_images will be picked `
-- Please run the inference script as:
-` python inference.py <checkpoint_file> <grayscale_image>` -> Stores a file called output.jpg, which will be the colored image.
+The following are the methods I have used and have tried:</br>
+1) The first method uses a simple CNN as given in the problem statement. The output of the model will be a color image, with 3 channels and I try to minimize the error by calculating the MSE between the traget or the acutal output image and the obtained output image from the model after running the inference step.</br>
+2) The second method I would like to try in the future is using the L *a *b channels. According to the the following paper - https://arxiv.org/pdf/1603.08511.pdf the L channel can be used to predict the values of *a and *b channels. This is an interesting take and again, we can either use regression to predict the channel values or use classification to predict the bin(class) to which ab belong.
 
-## Bonus
-- Since I have used the L *a and *b channels to work on this challenge, I believe the rescaling done at the end for the lighting channel will handle the general color temperature/lighting factor of the image.
+# Evaluation Metrics for the model:
+1) Here, I have used Peak Signal to Noise Ratio(PSNR) as the performance evaluation metric for the model, which evaluates the difference between the original image and the obtained color image and is measured in decibels. A higher PSNR value indicates a higher reconstruction quality of the obtained image. Even though many colorization methods use CIELAB and YUV color spaces, the obtained results are transformed to RGB color space because RGB representation of images is a standard way to display colors. For this reason, PSNR between the R, G and B components of the original and the colorized image can be used as a performance metric for colorization.
+2) The second evaluation metric I have used for improving image quality is SSIM(Structural Similarity Index) and is roughly based on - https://research.nvidia.com/sites/default/files/pubs/2017-03_Loss-Functions-for/NN_ImgProc.pdf. Here, I take in the input as the image obtained from the CNN and the actual target image and try to increase the structural similarity score and make it as close to 1 through backprop.
+
+
+# Additional tasks:
+3) I have also implemented a model that leverages a simple CNN to construct a higher resolution image from the given input image. This approach is based on the paper - https://arxiv.org/pdf/1501.00092v3.pdf. The model and the way to train this model is written in super_resolution.py. Although I have used a pretrained network to achieve this, the model size is pretty small and gives a better smoothened result.</br>
+4) Here, as asked in the problem statement, I have tried to control the average temperature of the image using all 3 channels (R, G and B) using the GIMP algorithm. I have written the function gimp_color_balance which is roughly based on the following implementation - https://docs.gimp.org/2.10/en/gimp-layer-white-balance.html.</br>
+5) The temperature or white-balance of the image can also be controlled by a neural network and is given in the following research paper - https://openaccess.thecvf.com/content_CVPR_2020/papers/Afifi_Deep_White-Balance_Editing_CVPR_2020_paper.pdf.
+According to the paper, the model is made up of an encoder-decoder architecture and I would like to implement the model in the future.
+
+# Running the model:
+1) Running the train pipeline - </br>
+`$ python execute_model <path_to_data_directory>`
+2) Running the inference script - </br>
+`$ python inference_script <path_to_checkpoint> <path_to_grayscale_image>`
