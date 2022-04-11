@@ -1,3 +1,4 @@
+from locale import normalize
 from turtle import color
 from typing import Tuple
 from torch.utils.data import Dataset
@@ -7,7 +8,7 @@ import os
 from skimage.color import rgb2lab
 import numpy as np
 
-from torchvision.transforms.functional import resize
+from torchvision import transforms
 
 # Import PIl.Image to read image data
 import cv2
@@ -39,8 +40,9 @@ class ColorizeData(Dataset):
 
         color_image = cv2.imread(image_path)
 
+        normalize = transforms.ToTensor()
         l_channel, a, b = cv2.split(color_image)
-        l_channel = self.input_transform(l_channel)
-        ab = cv2.merge((a, b))
+        l_channel = normalize(self.input_transform(l_channel))
+        ab = normalize(cv2.merge((a, b)))
         ab = self.target_transform(ab)
         return (l_channel, ab)
