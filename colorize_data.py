@@ -1,18 +1,9 @@
-from locale import normalize
-from turtle import color
 from typing import Tuple
 from torch.utils.data import Dataset
 import torchvision.transforms as T
 import torch
 import os
-from skimage.color import rgb2lab
-import numpy as np
-
-from torchvision import transforms
-
-# Import PIl.Image to read image data
 import cv2
-
 
 class ColorizeData(Dataset):
     def __init__(self, landscape_dataset, data_directory):
@@ -21,13 +12,10 @@ class ColorizeData(Dataset):
         self.landscape_dataset = landscape_dataset
         self.data_directory = data_directory
         self.input_transform = T.Compose([T.ToTensor(),
-                                          T.Resize(size=(224, 224)),
-                                          T.Normalize((0.5), (0.5))
-                                          ])
+                                          T.Resize(size=(224, 224))])
         # Use this on target images(colorful ones)
-        self.target_transform = T.Compose([T.ToTensor(),
-                                           T.Resize(size=(224, 224)),
-                                           T.Normalize((0.5, 0.5), (0.5, 0.5))])
+        self.target_transform = T.Compose([T.ToTensor(), 
+                                           T.Resize(size=(224, 224))])
 
     def __len__(self) -> int:
         # return Length of dataset
@@ -39,10 +27,12 @@ class ColorizeData(Dataset):
             self.data_directory, self.landscape_dataset[index])
 
         color_image = cv2.imread(image_path)
-
-        normalize = transforms.ToTensor()
         l_channel, a, b = cv2.split(color_image)
-        l_channel = normalize(self.input_transform(l_channel))
-        ab = normalize(cv2.merge((a, b)))
+        ab = cv2.merge((a, b))
+
+        l_channel = (l_channel + 128) / 255
+        l_channel = self.input_transform(l_channel)
+        l_channel = l_channel.type(torch.FloatTensor)
         ab = self.target_transform(ab)
+        ab = ab.type(torch.FloatTensor)
         return (l_channel, ab)

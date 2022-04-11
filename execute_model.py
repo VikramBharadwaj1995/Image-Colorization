@@ -1,4 +1,3 @@
-from operator import imod
 from train import Trainer
 import torch
 import sys, os

@@ -1,13 +1,6 @@
-from numpy import intp
-from sklearn import datasets
-from sklearn.utils import shuffle
 import torch
 import os
-from zmq import device
-
-#Import ColorizeData class
 from colorize_data import ColorizeData
-# from basic_model import Net
 from enc_dec import AE_conv
 import torch.nn as nn
 import numpy as np
@@ -91,7 +84,7 @@ class Trainer:
             
             running_loss += loss.item()
             if i % 50 == 0:
-                print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss, "\nRunning Loss = ", running_loss)
+                print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss)
 
         final_loss = running_loss / len(train_dataloader)
         final_psnr = running_psnr / len(train_dataloader)
@@ -119,7 +112,7 @@ class Trainer:
                 running_psnr += batch_psnr
 
                 if i % 50 == 0:
-                    print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss, "\nRunning Loss = ", running_loss)
+                    print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss)
 
         # Validation loop end
         # ------
