@@ -7,7 +7,8 @@ from zmq import device
 
 #Import ColorizeData class
 from colorize_data import ColorizeData
-from basic_model import Net
+# from basic_model import Net
+from enc_dec import AE_conv
 import torch.nn as nn
 import numpy as np
 import math
@@ -19,7 +20,7 @@ class Trainer:
         self.learning_rate = 0.001
         self.device = 'CUDA' if torch.cuda.is_available() else 'CPU'
         self.criterion = nn.MSELoss()
-        self.model = Net()
+        self.model = AE_conv()
 
     # Writing a function to compute the PSNR performance metric that measures similarity between the output from the model and the target. 
     def psnr(self, target, output, max_val=1.):
