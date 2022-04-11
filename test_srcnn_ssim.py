@@ -1,11 +1,14 @@
-import torch
+import os
+import sys
+
 import cv2
+import numpy as np
+import torch
+from torchvision.utils import save_image
+
 from SRCNN_model import SRCNN
 from ssim_loss import calculate_ssim
-import numpy as np
-import os
-from torchvision.utils import save_image
-import sys
+
 
 def exec_test(image_path):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -16,7 +19,7 @@ def exec_test(image_path):
     test_image_name = image_path.split(os.path.sep)[-1].split('.')[0]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = image.reshape(image.shape[0], image.shape[1], 1)
-    image = image / 255. # normalize the pixel values
+    image = image / 255.  # normalize the pixel values
     cv2.imshow('Greyscale image', image)
     cv2.waitKey(0)
     model.eval()
@@ -31,7 +34,9 @@ def exec_test(image_path):
         os.mkdir('outputs')
     save_image(outputs, f"../outputs/SRCNN_{test_image_name}.jpg")
 
-    print(f"The output of the model has been stored in the \"outputs\" directory as SRCNN_{test_image_name}.jpg")
+    print(
+        f"The output of the model has been stored in the \"outputs\" directory as SRCNN_{test_image_name}.jpg")
+
 
 if __name__ == '__main__':
     image_path = sys.argv[1]

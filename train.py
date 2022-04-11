@@ -1,17 +1,15 @@
-from numpy import intp
-from sklearn import datasets
-from sklearn.utils import shuffle
-import torch
+import math
 import os
-from zmq import device
 
-#Import ColorizeData class
+import numpy as np
+import torch
+import torch.nn as nn
+
+# Import ColorizeData class
 from colorize_data import ColorizeData
 # from basic_model import Net
 from enc_dec import AE_conv
-import torch.nn as nn
-import numpy as np
-import math
+
 
 class Trainer:
     def __init__(self):
@@ -22,7 +20,7 @@ class Trainer:
         self.criterion = nn.MSELoss()
         self.model = AE_conv()
 
-    # Writing a function to compute the PSNR performance metric that measures similarity between the output from the model and the target. 
+    # Writing a function to compute the PSNR performance metric that measures similarity between the output from the model and the target.
     def psnr(self, target, output, max_val=1.):
         """
         Compute Peak Signal to Noise Ratio (the higher the better).
@@ -45,35 +43,39 @@ class Trainer:
         train_size = int(0.8*len(dataset))
         test_size = len(dataset) - train_size
 
-        train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-        
+        train_dataset, val_dataset = torch.utils.data.random_split(
+            dataset, [train_size, test_size])
+
         # dataloaders
         # Train dataloader
         train_dataset = ColorizeData(train_dataset, data_directory)
-        train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
-        
+        train_dataloader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=64, shuffle=True)
+
         # Validation dataloader
         val_dataset = ColorizeData(val_dataset, data_directory)
-        val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False)
+        val_dataloader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=64, shuffle=False)
 
         # Model and the Loss function to use
-        # You may also use a combination of more than one loss function 
+        # You may also use a combination of more than one loss function
         # or create your own.
 
         if self.device == 'CUDA':
             self.model = self.model.cuda()
             self.criterion = self.criterion.cuda()
-        
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
+
+        optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=self.learning_rate)
+
         # train loop
         # Define Running Loss to keep track later in the train loop
         running_loss = 0.0
         running_psnr = 0.0
 
-        # Print loaded model 
+        # Print loaded model
         # print("Model loaded ->", self.model)
-        
+
         for i, (input, target) in enumerate(train_dataloader):
             if self.device == 'CUDA':
                 input = input.cuda()
@@ -81,21 +83,22 @@ class Trainer:
 
             output_image = self.model(input)
             loss = self.criterion(output_image, target)
-            
+
             # Set the gradient of tensors to zero.
             optimizer.zero_grad()
             # Compute the gradient of the current tensor by employing chain rule and propogating it back in the network.
             loss.backward()
             # Update the parameters in the direction of the gradient.
             optimizer.step()
-            
+
             running_loss += loss.item()
             if i % 50 == 0:
-                print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss, "\nRunning Loss = ", running_loss)
+                print("Current Epoch = ", current_epoch, "\nCurrent loss = ",
+                      loss, "\nRunning Loss = ", running_loss)
 
         final_loss = running_loss / len(train_dataloader)
         final_psnr = running_psnr / len(train_dataloader)
-        
+
         return val_dataloader, final_loss, final_psnr
 
     def validate(self, val_dataloader, current_epoch):
@@ -110,7 +113,7 @@ class Trainer:
                 if self.device == 'CUDA':
                     input = input.cuda()
                     target = target.cuda()
-                
+
                 output_image = self.model(input)
                 loss = self.criterion(output_image, target)
 
@@ -119,7 +122,8 @@ class Trainer:
                 running_psnr += batch_psnr
 
                 if i % 50 == 0:
-                    print("Current Epoch = ", current_epoch, "\nCurrent loss = ", loss, "\nRunning Loss = ", running_loss)
+                    print("Current Epoch = ", current_epoch, "\nCurrent loss = ",
+                          loss, "\nRunning Loss = ", running_loss)
 
         # Validation loop end
         # ------

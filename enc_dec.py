@@ -1,5 +1,6 @@
 import torch.nn as nn
 
+
 class AE_conv(nn.Module):
     def __init__(self):
         super().__init__()
